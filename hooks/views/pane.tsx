@@ -20,8 +20,11 @@ export type Kit = Pick<Elements['mobile'], 'Box' | 'Text' | 'Button'> & Partial<
 export const MIN_COLUMNS = 40
 export const MIN_ROWS = 15
 
-/** Header, two gauges and the toggle row. */
-const CHROME_ROWS = 4
+/** The header (which carries the window toggle) and the two gauges. */
+const CHROME_ROWS = 3
+
+/** The toggle's hotkey; a plain Button draws as `w: <label>`. */
+const TOGGLE_KEY = 'w'
 
 /**
  * Inline above the prompt, a pane's body is never taller than what it draws,
@@ -99,8 +102,8 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
   // Inline, rows under INLINE_ROWS mean the room is short, not that the content was.
   const chartRows = model.rows - CHROME_ROWS
   const isTooSmall = model.columns < MIN_COLUMNS || chartRows < (isInline ? 8 : MIN_ROWS - CHROME_ROWS)
-  const padding = isInline ? Math.max(0, INLINE_ROWS - Math.max(model.rows, CHROME_ROWS + 1)) : 0
   let body: RenderNode[] = []
+  let bodyRows = 1
 
   if (!model.limit) {
     body = [<Text dimColor>{model.isWithoutLimits ? MESSAGES.withoutLimits : MESSAGES.waiting}</Text>]
@@ -121,22 +124,32 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
     const fitted = cells.slice(0, chartRows).map(row => row.slice(0, width))
     const packed = packCells(fitted)
     body = [<Raster key="chart" columns={packed.columns} rows={packed.rows} cells={packed.cells} />]
+    bodyRows = packed.rows
+  } else {
+    bodyRows = 0
   }
 
+  const padding = isInline ? Math.max(0, INLINE_ROWS - CHROME_ROWS - bodyRows) : 0
+
+  // The window toggle rides in the header after the title, so it costs no row.
   const other: WindowKind = model.kind === 'five_hour' ? 'seven_day' : 'five_hour'
+  const toggleLabel = `Show ${DISPLAY_NAME[other]}`
+  const titleWidth = head.left.reduce((sum, run) => sum + cellWidth(run.text), 0)
+  const toggleWidth = 2 + `${TOGGLE_KEY}: ${toggleLabel}`.length
+  const gap = Math.max(0, leftWidth - titleWidth - toggleWidth)
 
   return (
     <Box flexDirection="column">
       <Box flexDirection="row">
-        {runs(kit, padded(head.left, leftWidth))}
+        {runs(kit, head.left)}
+        <Text>{'  '}</Text>
+        <Button key="window" label={toggleLabel} hotkey={TOGGLE_KEY} plain onPress={model.onToggle} />
+        {gap > 0 ? <Text>{' '.repeat(gap)}</Text> : []}
         {runs(kit, rightAligned(head.right, rightWidth))}
       </Box>
       {gaugeRow(usage)}
       {gaugeRow(elapsed)}
       {body}
-      <Box flexDirection="row">
-        <Button key="window" label={`Show ${DISPLAY_NAME[other]}`} hotkey="w" plain onPress={model.onToggle} />
-      </Box>
       {padding > 0 ? <Box height={padding} /> : []}
     </Box>
   )

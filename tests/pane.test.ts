@@ -33,7 +33,7 @@ describe('the pane', () => {
 
         if (surface === 'terminal') {
           expect(raster?.props.columns).toBe(columns)
-          expect(raster?.props.rows).toBe(rows - 4)
+          expect(raster?.props.rows).toBe(rows - 3)
         } else {
           expect(raster).toBeUndefined()
         }
@@ -72,9 +72,9 @@ describe('the pane', () => {
     expect(rowsOf(await short.drawn())).toBeGreaterThanOrEqual(INLINE_ROWS)
     await short.unmount()
 
-    // Given 12 rows: the chart takes the 8 left after the header, gauges and toggle.
+    // Given 12 rows: the chart takes the 9 left after the header and gauges.
     const room = await $.ui.mount(pane('terminal', 98, 12, 'inline'))
-    expect((await room.find({ type: 'Raster' }))?.props.rows).toBe(8)
+    expect((await room.find({ type: 'Raster' }))?.props.rows).toBe(9)
     await room.unmount()
   })
 
