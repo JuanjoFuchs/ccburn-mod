@@ -3,7 +3,7 @@ import { describe, expect, test } from 'claude-code/testing'
 import { formatDuration, formatPercentage, formatResetTime, utilizationColor } from '../hooks/core/format'
 import { bar, barWidth, gauges, header, RICH, type Run } from '../hooks/core/gauges'
 import { budgetPace, burnRate, effectiveUtilization, minutesToEmpty, paceEmoji, type Snapshot } from '../hooks/core/metrics'
-import { getLabels } from '../hooks/core/plotext'
+import { build, getLabels } from '../hooks/core/plotext'
 import { toFixed } from '../hooks/core/py'
 
 const HOUR = 3_600_000
@@ -104,6 +104,26 @@ describe('formatting (ccburn test_formatting.py)', () => {
     expect(toFixed(16.666666666666668, 1)).toBe('16.7')
     expect(getLabels([0, 100 / 6, 200 / 6, 50, 400 / 6, 500 / 6, 100])).toEqual(['0.0', '16.7', '33.3', '50.0', '66.7', '83.3', '100.0'])
     expect(getLabels([0, 10, 20, 30, 40, 50, 60])).toEqual(['0', '10', '20', '30', '40', '50', '60'])
+  })
+})
+
+describe('x tick labels', () => {
+  test('overlapping labels resolve in ascending position, and a dropped label loses its tick', () => {
+    const rows = build({
+      width: 40,
+      height: 8,
+      xlim: [0, 10],
+      ylim: [0, 100],
+      xticks: [5.2, 5],
+      xlabels: ['later', 'first'],
+      signals: [{ x: [0, 10], y: [0, 100], color: 0x646464, marker: 'braille' }],
+      ticksColor: 0x646464,
+    })
+    const labels = rows[rows.length - 1]?.map(c => c.glyph).join('') ?? ''
+    const axis = rows[rows.length - 2]?.map(c => c.glyph).join('') ?? ''
+    expect(labels).toContain('first')
+    expect(labels).not.toContain('later')
+    expect(axis.split('┬')).toHaveLength(2)
   })
 })
 

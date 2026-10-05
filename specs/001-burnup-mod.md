@@ -1,7 +1,7 @@
 ---
 id: "001"
 title: ccburn burn-up chart as a Claude Code mod
-status: pending          # pending | in_progress | complete
+status: in_progress      # pending | in_progress | complete
 blocked_by: []
 blocks: []
 ---
@@ -105,44 +105,44 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
 
 ## Implementation Tasks
 
-- [ ] Add the plugin (`.claude-plugin/plugin.json`, `hooks/hooks.json`, the hooks module, `types/index.d.ts` for its `$.state` values) and the root marketplace manifest; record the layout in `PROJECT_UNDERSTANDING.md` and the test/validate commands in `AGENTS.md`.
-- [ ] Probe the two open engine questions before building on them: does a full-pane `Raster` pass the tree-size cap, and does the test kit serve `$.state`? Record the answers in `ai-docs/reference/mod-api.md`.
-- [ ] Port the metrics (FR3) and formatting (FR2b) as pure modules, carrying over the cases of ccburn's `tests/test_calculator.py`, `tests/test_formatting.py` and `tests/test_chart.py`.
-- [ ] Readings + history in `$.store` with merge, pruning and cap (FR4, NFR3).
-- [ ] Chart renderer producing `Raster` cells from readings, window and clock (FR1), plus header and gauges (FR2) and the too-small rule (FR2a).
-- [ ] A golden generator (`tools/`) that renders fixed fixtures through the real ccburn (its venv, patched clock, `TZ=UTC`, fixed hash seed) and writes the cell grids the TS renderer is tested against.
-- [ ] `/ccburn` command, pane, window toggle, `openOnStart` (FR5); minute timer (FR6); empty states (FR7); non-terminal fallback (NFR2).
-- [ ] Tests run by `claude plugin test`; `claude plugin validate` and `tsc -p` clean.
-- [ ] README with the install lines and a screenshot (FR8).
+- [x] Add the plugin (`.claude-plugin/plugin.json`, `hooks/hooks.json`, the hooks module, `types/index.d.ts` for its `$.state` values) and the root marketplace manifest; record the layout in `PROJECT_UNDERSTANDING.md` and the test/validate commands in `AGENTS.md`.
+- [x] Probe the two open engine questions before building on them: does a full-pane `Raster` pass the tree-size cap, and does the test kit serve `$.state`? Record the answers in `ai-docs/reference/mod-api.md`.
+- [x] Port the metrics (FR3) and formatting (FR2b) as pure modules, carrying over the cases of ccburn's `tests/test_calculator.py`, `tests/test_formatting.py` and `tests/test_chart.py`.
+- [x] Readings + history in `$.store` with merge, pruning and cap (FR4, NFR3).
+- [x] Chart renderer producing `Raster` cells from readings, window and clock (FR1), plus header and gauges (FR2) and the too-small rule (FR2a).
+- [x] A golden generator (`tools/`) that renders fixed fixtures through the real ccburn (its venv, patched clock, local time zone recorded per fixture, fixed hash seed) and writes the cell grids the TS renderer is tested against.
+- [x] `/ccburn` command, pane, window toggle, `openOnStart` (FR5); minute timer (FR6); empty states (FR7); non-terminal fallback (NFR2).
+- [x] Tests run by `claude plugin test`; `claude plugin validate` and `tsc -p` clean.
+- [ ] README with the install lines and a screenshot (FR8). Install lines done; the screenshot waits on the live check (AC8).
 
 ## Acceptance Criteria
 
 ### Validation
-- [ ] AC1: `claude plugin validate` reports no refusals and lists hooks on `session.start`, `session.measure`, `command.run` and `ui.render` (Pane). — `integration`
-- [ ] AC2: `tsc -p` type-checks clean. — `integration`
+- [x] AC1: `claude plugin validate` reports no refusals and lists hooks on `session.start`, `session.measure`, `command.run` and `ui.render` (Pane). — `integration`
+- [x] AC2: `tsc -p` type-checks clean. — `integration`
 
 ### Metrics (FR3)
-- [ ] AC3: Budget pace, burn rate (including the < 3 points and < 10 %-span zero cases), time-to-100 and the 0.85 / 1.15 emoji boundaries match ccburn for the cases in `tests/test_calculator.py`. — `unit`
-- [ ] AC4: A window whose `resetsAt` is past reads 0 %, never its stale percentage. — `unit`
+- [x] AC3: Budget pace, burn rate (including the < 3 points and < 10 %-span zero cases), time-to-100 and the 0.85 / 1.15 emoji boundaries match ccburn for the cases in `tests/test_calculator.py`. — `unit`
+- [x] AC4: A window whose `resetsAt` is past reads 0 %, never its stale percentage. — `unit`
 
 ### Chart (FR1, FR2)
-- [ ] AC5: **Golden match.** For each golden fixture rendered by the real ccburn, the TS chart grid matches it cell for cell in glyph and foreground colour. The fixtures cover a 5-hour window with a green projection, a 5-hour window with a Depleted line, a weekly window, no readings, and two sizes (80 × 20, 60 × 14). — `unit` (golden fixtures; covers frame, labels, legend, braille, fill, draw order)
-- [ ] AC6: X-tick rules: `HH:MM` on the 5-hour window, `Tue 09h` style on the weekly; a grid tick within 10 % of Now or Depleted is dropped; overlapping labels resolve in ascending position. — `unit`
-- [ ] AC7: The `Raster`'s `columns` equal the pane's body width at 80 and at 160 columns, and its `rows` equal the body rows minus four (header, two gauges, and the toggle row). — `integration` (`ui.mount` on `terminal`)
-- [ ] AC7a: Header and gauge text for fixed inputs match ccburn's: emoji, `Resets in 2h 30m`, bar glyphs and widths at W = 80 and 60, `40%` / `50%`, and the loading state. — `unit`
-- [ ] AC7b: A body under 40 × 15 shows the too-small line and no `Raster`. — `integration`
+- [x] AC5: **Golden match.** For each golden fixture rendered by the real ccburn, the TS chart grid matches it cell for cell in glyph and foreground colour. The fixtures cover a 5-hour window with a green projection, a 5-hour window with a Depleted line, a weekly window, no readings, and two sizes (80 × 20, 60 × 14). — `unit` (golden fixtures; covers frame, labels, legend, braille, fill, draw order)
+- [x] AC6: X-tick rules: `HH:MM` on the 5-hour window, `Tue 09h` style on the weekly; a grid tick within 10 % of Now or Depleted is dropped; overlapping labels resolve in ascending position. — `unit`
+- [x] AC7: The `Raster`'s `columns` equal the pane's body width at 80 and at 160 columns, and its `rows` equal the body rows minus four (header, two gauges, and the toggle row). — `integration` (`ui.mount` on `terminal`)
+- [x] AC7a: Header and gauge text for fixed inputs match ccburn's: emoji, `Resets in 2h 30m`, bar glyphs and widths at W = 80 and 60, `40%` / `50%`, and the loading state. — `unit`
+- [x] AC7b: A body under 40 × 15 shows the too-small line and no `Raster`. — `integration`
 - [ ] AC8: In a live session, `/ccburn` and `/ccburn weekly` read the same as `ccburn session` / `ccburn weekly` open in a second terminal at the same moment. — `manual` (end-to-end eyeball across two real renderers and live data; AC5 already pins the renderer)
 
 ### Live behaviour (FR4–FR7)
-- [ ] AC9: A `session.measure` reading appears in the chart; advancing the mocked clock one minute with no reading moves the Now column and updates time-to-reset. — `integration`
-- [ ] AC10: Readings survive a module reload; a second writer's readings are merged, not overwritten; out-of-window readings are pruned. — `integration`
-- [ ] AC11: `/ccburn` opens the pane on the 5-hour window, `/ccburn weekly` on the weekly, and the toggle button switches between them. — `integration` (`ui.press`)
-- [ ] AC12: With `openOnStart: false` the pane does not open at session start; with `true` it is requested. — `integration` (`test(name, { options })`)
-- [ ] AC13: Before any reading the pane shows the waiting message; with `rateLimits` empty it shows the no-rate-limits message. — `integration`
-- [ ] AC14: On `desktop` the pane mounts the header and no `Raster`. Test bodies loop over `['terminal', 'desktop']`. — `integration`
+- [x] AC9: A `session.measure` reading appears in the chart; advancing the mocked clock one minute with no reading moves the Now column and updates time-to-reset. — `integration`
+- [x] AC10: Readings survive a module reload; a second writer's readings are merged, not overwritten; out-of-window readings are pruned. — `integration`
+- [x] AC11: `/ccburn` opens the pane on the 5-hour window, `/ccburn weekly` on the weekly, and the toggle button switches between them. — `integration` (`ui.press`)
+- [x] AC12: With `openOnStart: false` the pane does not open at session start; with `true` it is requested. — `integration` (`test(name, { options })`)
+- [x] AC13: Before any reading the pane shows the waiting message; with `rateLimits` empty it shows the no-rate-limits message. — `integration`
+- [x] AC14: On `desktop` the pane mounts the header and no `Raster`. Test bodies loop over `['terminal', 'desktop']`. — `integration`
 
 ### Distribution (FR8)
-- [ ] AC15: From a clean profile, `claude plugin marketplace add <local checkout>` then `claude plugin install` installs it, and a new session's `/ccburn` draws the chart after the first turn. — `manual` (installs into a real profile)
+- [ ] AC15: From a clean profile, `claude plugin marketplace add <local checkout>` then `claude plugin install` installs it, and a new session's `/ccburn` draws the chart after the first turn. — `manual` (installs into a real profile). *Install half verified 2026-10-05 in a throwaway profile: the marketplace adds and the plugin installs, enabled. The session half waits on the live check.*
 
 ## Findings: implementation
 
