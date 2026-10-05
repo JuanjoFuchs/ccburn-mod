@@ -1,0 +1,4 @@
+node_modules/
+.env
+# engine-written types, regenerated on every load
+.claude-plugin/types/
