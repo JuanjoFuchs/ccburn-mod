@@ -1,0 +1,13 @@
+{
+  "name": "ccburn-mod",
+  "description": "ccburn's burn-up chart, inside Claude Code.",
+  "owner": { "name": "Juan José Fuchs", "url": "https://github.com/JuanjoFuchs" },
+  "plugins": [
+    {
+      "name": "ccburn",
+      "description": "ccburn's burn-up chart for your Claude Code session and weekly limits, in a pane inside Claude Code.",
+      "version": "0.1.0",
+      "source": "./"
+    }
+  ]
+}
