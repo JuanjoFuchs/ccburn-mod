@@ -3,6 +3,7 @@ import type { EngineInterface as Engine, Register } from 'claude-code'
 
 import type { Reading, WindowKind } from '../types'
 import { machineOffset } from './core/clock'
+import { collectStdin, COLLECT_ARGV, HISTORY_ARGV, parseHistory } from './core/ccburn'
 import { DISPLAY_NAME } from './core/gauges'
 import { fromStore, limitOf, merge, readingsOf, snapshotsOf } from './core/readings'
 import { drawPane, INLINE_ROWS } from './views/pane'
@@ -11,6 +12,7 @@ const PANE = 'ccburn'
 const TITLE = 'ccburn'
 const STORE_KEY = 'readings'
 const TICK_MS = 60_000
+const CCBURN_TIMEOUT_MS = 10_000
 /**
  * Body rows to ask for when the pane sits inline above the prompt (a terminal
  * that is not fullscreen): the header, gauges, chart and toggle row. A docked
@@ -43,8 +45,69 @@ async function save($: Engine, fresh: readonly Reading[]): Promise<void> {
   await update($, readingsAtom, current => merge(current, merged, now))
 }
 
+/**
+ * Spec 002: share history with ccburn while it answers. Set from `useCcburn`
+ * at session start; a failed call turns it off until the next session.
+ */
+let isCcburnUp = true
+
+/** Pulls ccburn's history (every session's readings) into what the pane draws. */
+async function readCcburn($: Engine): Promise<void> {
+  if (!isCcburnUp) {
+    return
+  }
+
+  const result = await $.process.run(HISTORY_ARGV, { timeoutMs: CCBURN_TIMEOUT_MS })
+  const shared = result.exitCode === 0 ? parseHistory(result.stdout) : null
+
+  if (shared === null) {
+    isCcburnUp = false
+    return
+  }
+
+  const now = await $.clock.now()
+  await update($, readingsAtom, current => merge(current, shared, now))
+}
+
+/** Hands this session's readings to ccburn's history, as the status line would. */
+async function writeCcburn($: Engine, fresh: readonly Reading[]): Promise<void> {
+  if (!isCcburnUp) {
+    return
+  }
+
+  const result = await $.process.run(COLLECT_ARGV, { stdin: collectStdin(fresh), timeoutMs: CCBURN_TIMEOUT_MS })
+  if (result.exitCode !== 0) {
+    isCcburnUp = false
+  }
+}
+
+/** The minute tick: ccburn's history first, then the clock the chart is drawn against. */
+async function tick($: Engine): Promise<void> {
+  try {
+    await readCcburn($)
+  } catch {
+    isCcburnUp = false
+  }
+
+  const at = await $.clock.now()
+  await update($, nowAtom, () => at)
+}
+
+/** After a measured reading: this plugin's store, then ccburn's history. */
+async function persist($: Engine, fresh: readonly Reading[]): Promise<void> {
+  await save($, fresh)
+
+  try {
+    await writeCcburn($, fresh)
+  } catch {
+    isCcburnUp = false
+  }
+}
+
 export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
+    isCcburnUp = options.useCcburn !== false
+
     await $.command.register({
       name: 'ccburn',
       description: "Show ccburn's burn-up chart for your rate limits (add 'weekly' for the 7-day window)",
@@ -62,11 +125,12 @@ export const register: Register = (on, options) => {
       void save($, fresh).catch(() => undefined)
     }
 
+    // The first read of ccburn runs at once, off this hook; then every minute with the clock.
+    $.clock.after(0, () => {
+      void tick($).catch(() => undefined)
+    })
     $.clock.every(TICK_MS, () => {
-      void $.clock
-        .now()
-        .then(at => update($, nowAtom, () => at))
-        .catch(() => undefined)
+      void tick($).catch(() => undefined)
     })
 
     if (options.openOnStart !== false) {
@@ -85,7 +149,7 @@ export const register: Register = (on, options) => {
       await update($, readingsAtom, current => merge(current, fresh, now))
       // The store write runs on a timer so this hook never waits on it.
       $.clock.after(0, () => {
-        void save($, fresh).catch(() => undefined)
+        void persist($, fresh).catch(() => undefined)
       })
     } else if (e.rateLimits.length === 0) {
       await update($, withoutLimitsAtom, () => true)

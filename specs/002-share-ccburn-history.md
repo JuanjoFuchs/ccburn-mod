@@ -1,7 +1,7 @@
 ---
 id: "002"
 title: Share history with ccburn when it is installed
-status: pending          # pending | in_progress | complete
+status: in_progress      # pending | in_progress | complete
 blocked_by: []
 blocks: []
 ---
@@ -46,19 +46,19 @@ JJ, 2026-10-05: *"how can we make it so that they share the storage. So if someb
 
 ## Implementation Tasks
 
-- [ ] Parse `ccburn history` JSON into readings (pure, tested).
-- [ ] Build the `collect` stdin from readings (pure, tested).
-- [ ] Wire the read on start and on the tick, the write after a measure, detection, and `useCcburn`.
-- [ ] Test-world support for `process.run`.
-- [ ] README: the "with ccburn" section.
+- [x] Parse `ccburn history` JSON into readings (pure, tested).
+- [x] Build the `collect` stdin from readings (pure, tested).
+- [x] Wire the read on start and on the tick, the write after a measure, detection, and `useCcburn`.
+- [x] Test-world support for `process.run`.
+- [x] README: the "with ccburn" section.
 
 ## Acceptance Criteria
 
-- [ ] AC1: Given `ccburn history` output with readings newer than the mod's own, the pane's gauge shows the newer percentage after the next tick, with no `session.measure`. — `integration` (mocked `process.run`, mocked clock)
-- [ ] AC2: A `session.measure` reading results in one `ccburn collect` run whose stdin parses to the status-line shape with `resets_at` in epoch seconds. — `integration`
-- [ ] AC3: When `ccburn` fails (non-zero exit), the mod stops calling it and still draws from its own readings. — `integration`
-- [ ] AC4: With `useCcburn: false`, no command runs. — `integration` (`test(name, { options })`)
-- [ ] AC5: The parser skips malformed snapshots and limits; the stdin builder round-trips through ccburn's `collect` field names. — `unit`
+- [x] AC1: Given `ccburn history` output with readings newer than the mod's own, the pane's gauge shows the newer percentage after the next tick, with no `session.measure`. — `integration` (mocked `process.run`, mocked clock)
+- [x] AC2: A `session.measure` reading results in one `ccburn collect` run whose stdin parses to the status-line shape with `resets_at` in epoch seconds. — `integration`
+- [x] AC3: When `ccburn` fails (non-zero exit), the mod stops calling it and still draws from its own readings. — `integration`
+- [x] AC4: With `useCcburn: false`, no command runs. — `integration` (`test(name, { options })`)
+- [x] AC5: The parser skips malformed snapshots and limits; the stdin builder round-trips through ccburn's `collect` field names. — `unit`
 - [ ] AC6: Live: in the test pane (work profile, `ccburn collect` in its status line), with the pane's session idle while other agents work, the usage gauge moves within two minutes. — `manual` (needs real sessions burning the account)
 
 ## Testing Approach

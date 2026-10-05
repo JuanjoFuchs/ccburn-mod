@@ -22,6 +22,10 @@ ccburn-mod is a Claude Code **mod**: a plugin of TypeScript hooks that Claude Co
 
 The chart is a TypeScript port of ccburn's, and the tests hold it to ccburn's own output cell for cell.
 
+## With ccburn installed
+
+Claude Code only tells a session about its own replies, so on its own the pane's usage line moves when that session is working. If you also run [ccburn](https://github.com/JuanjoFuchs/ccburn) with `ccburn collect` in your status line, ccburn records every session's readings, and the mod reads that history (`ccburn history --json`, ccburn after 0.7.2) once a minute: the chart then follows your whole account even while this session is idle. The mod also adds its own readings to ccburn's history through `ccburn collect`, so ccburn's chart benefits too. Turn it off with the `useCcburn` setting.
+
 ## Requirements
 
 - A Claude Code build with mods (the plugin API this was built against is 2.1.289). The mod API is early access, so a future Claude Code release may need an update here.
@@ -32,6 +36,7 @@ The chart is a TypeScript port of ccburn's, and the tests hold it to ccburn's ow
 | Setting | Default | |
 |---|---|---|
 | `openOnStart` | `true` | Open the pane when a session starts. Claude Code only seats a pane nobody asked for on a wide terminal (144+ columns); otherwise run `/ccburn`. |
+| `useCcburn` | `true` | Share history with the ccburn CLI when it is installed (see above). |
 
 Change it in `/config` or with `claude plugin configure ccburn`.
 

@@ -14,6 +14,12 @@
       "title": "Open the chart at session start",
       "description": "Open the ccburn pane when a session starts. Claude Code only seats an unasked pane on a wide terminal; otherwise run /ccburn.",
       "default": true
+    },
+    "useCcburn": {
+      "type": "boolean",
+      "title": "Share history with ccburn",
+      "description": "When the ccburn CLI is installed, read its history (every session's readings, via `ccburn collect` in your status line) and add this session's readings to it.",
+      "default": true
     }
   }
 }

@@ -9,7 +9,24 @@ export type World = {
   commands: string[]
   /** What `$.session.usage()` answers; change it between calls. */
   rateLimits: SessionRateLimit[]
+  /** Every host command the plugin ran, with its stdin. */
+  runs: { argv: readonly string[]; stdin?: string }[]
+  /** What `ccburn history` prints; null makes every ccburn command fail (not installed). */
+  ccburnHistory: object | null
 }
+
+/** `ccburn history --json` output for these snapshots. */
+export const ccburnHistoryOf = (snapshots: { at: number; fiveHour: number; sevenDay?: number }[]) => ({
+  version: 1,
+  data_dir: '/home/me/.ccburn',
+  snapshots: snapshots.map(s => ({
+    timestamp: new Date(s.at).toISOString(),
+    limits: {
+      five_hour: { used_percentage: s.fiveHour, resets_at: new Date(RESETS).toISOString() },
+      ...(s.sevenDay === undefined ? {} : { seven_day: { used_percentage: s.sevenDay, resets_at: '2026-09-19T00:00:00+00:00' } }),
+    },
+  })),
+})
 
 export const PLUGIN = 'ccburn'
 export const NOW = Date.parse('2026-09-15T16:30:00Z')
@@ -23,7 +40,26 @@ export const limits = (fiveHour: number, sevenDay = 20): SessionRateLimit[] => [
 
 /** Seats the engine beneath the plugin: the ops it calls and the bottoms of the events it hooks. */
 export function worldOf(on: On, store: Record<string, unknown> = {}): World {
-  const world: World = { store: new Map(Object.entries(store)), opened: [], openedRows: [], commands: [], rateLimits: [] }
+  const world: World = {
+    store: new Map(Object.entries(store)),
+    opened: [],
+    openedRows: [],
+    commands: [],
+    rateLimits: [],
+    runs: [],
+    ccburnHistory: null,
+  }
+
+  on('process.run', ($, e) => {
+    world.runs.push({ argv: e.argv, stdin: e.init?.stdin })
+    const isHistory = e.argv[1] === 'history'
+
+    if (world.ccburnHistory === null) {
+      return { value: { exitCode: 1, stdout: '', stderr: 'ccburn: not found' } } as never
+    }
+
+    return { value: { exitCode: 0, stdout: isHistory ? JSON.stringify(world.ccburnHistory) : '', stderr: '' } } as never
+  })
 
   on('store.get', ($, e) => ({ value: world.store.get(e.key) }))
   on('store.set', ($, e) => {
