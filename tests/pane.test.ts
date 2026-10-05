@@ -1,10 +1,23 @@
 import { describe, expect, mock, test } from 'claude-code/testing'
 
-import { MESSAGES } from '../hooks/views/pane'
+import { INLINE_ROWS, MESSAGES } from '../hooks/views/pane'
 import { command, limits, measure, NOW, pane, PLUGIN, SESSION, worldOf } from './fixtures/world'
 
 const SURFACES = ['terminal', 'desktop'] as const
 const MINUTE = 60_000
+
+type Node = { type?: string; props?: Record<string, unknown>; children?: unknown[] } | string | null | undefined
+
+/** Terminal rows a drawn tree takes: a Text, Button or Box row is one; a Raster its rows; a Box its height. */
+function rowsOf(tree: unknown): number {
+  const node = tree as Node
+  if (node === null || node === undefined || typeof node === 'string') return 0
+  if (node.type === 'Raster') return Number(node.props?.rows ?? 0)
+  if (node.type === 'Box' && typeof node.props?.height === 'number') return node.props.height
+  if (node.type !== 'Box') return 1
+  const kids = (node.children ?? []).map(rowsOf)
+  return node.props?.flexDirection === 'column' ? kids.reduce((a, b) => a + b, 0) : Math.max(0, ...kids)
+}
 
 describe('the pane', () => {
   for (const surface of SURFACES) {
@@ -45,6 +58,24 @@ describe('the pane', () => {
       expect(await mounted.find({ text: MESSAGES.tooSmall })).toBeDefined()
       await mounted.unmount()
     }
+  })
+
+  test('inline above the prompt it draws tall enough to be given room, and fits the room it gets', async ($, on) => {
+    const world = worldOf(on)
+    world.rateLimits = limits(40)
+    mock.clock(on, { now: NOW })
+    await $.session.start(SESSION)
+
+    // Given only the rows its last, shorter content needed: it pads itself to INLINE_ROWS.
+    const short = await $.ui.mount(pane('terminal', 98, 5, 'inline'))
+    expect(await short.find({ type: 'Raster' })).toBeUndefined()
+    expect(rowsOf(await short.drawn())).toBeGreaterThanOrEqual(INLINE_ROWS)
+    await short.unmount()
+
+    // Given 12 rows: the chart takes the 8 left after the header, gauges and toggle.
+    const room = await $.ui.mount(pane('terminal', 98, 12, 'inline'))
+    expect((await room.find({ type: 'Raster' }))?.props.rows).toBe(8)
+    await room.unmount()
   })
 
   test('before any reading it waits; an account with no windows says so', async ($, on) => {
@@ -91,8 +122,10 @@ describe('the /ccburn command', () => {
     world.opened.length = 0
 
     const opened = await $.command.run(command())
-    expect(opened.text).toBe('ccburn: Session (5h) chart open.')
+    expect(opened.text).toBe('Session (5h) chart open.')
     expect(world.opened).toEqual(['ccburn'])
+    // Inline above the prompt the pane is only as tall as it asks: enough for the chart.
+    expect(world.openedRows[0]).toBeGreaterThanOrEqual(15)
 
     const mounted = await $.ui.mount(pane('terminal', 80, 30))
     expect(await mounted.find({ text: 'Session (5h)' })).toBeDefined()

@@ -4,6 +4,8 @@ import type { On, SessionRateLimit } from 'claude-code'
 export type World = {
   store: Map<string, unknown>
   opened: string[]
+  /** The inline rows each open asked for. */
+  openedRows: (number | undefined)[]
   commands: string[]
   /** What `$.session.usage()` answers; change it between calls. */
   rateLimits: SessionRateLimit[]
@@ -21,7 +23,7 @@ export const limits = (fiveHour: number, sevenDay = 20): SessionRateLimit[] => [
 
 /** Seats the engine beneath the plugin: the ops it calls and the bottoms of the events it hooks. */
 export function worldOf(on: On, store: Record<string, unknown> = {}): World {
-  const world: World = { store: new Map(Object.entries(store)), opened: [], commands: [], rateLimits: [] }
+  const world: World = { store: new Map(Object.entries(store)), opened: [], openedRows: [], commands: [], rateLimits: [] }
 
   on('store.get', ($, e) => ({ value: world.store.get(e.key) }))
   on('store.set', ($, e) => {
@@ -37,6 +39,7 @@ export function worldOf(on: On, store: Record<string, unknown> = {}): World {
   on('session.usage', () => ({ value: { startedAt: 0, context: { window: 200_000 }, rateLimits: world.rateLimits } }))
   on('ui.open', ($, e) => {
     world.opened.push(e.id)
+    world.openedRows.push(e.rows)
 
     return { value: { isPlaced: true } } as never
   })
@@ -47,13 +50,13 @@ export function worldOf(on: On, store: Record<string, unknown> = {}): World {
   return world
 }
 
-export const pane = (surface: 'terminal' | 'desktop', bodyColumns: number, bodyRows: number) => ({
+export const pane = (surface: 'terminal' | 'desktop', bodyColumns: number, bodyRows: number, placement: 'dock' | 'inline' = 'dock') => ({
   plugin: PLUGIN,
   component: 'Pane' as const,
   surface,
   requestId: 'ccburn',
-  viewport: { columns: 200, rows: 60, isFullscreen: true },
-  props: { title: 'ccburn', isFocused: false, bodyColumns, placement: 'dock' as const, scroll: { offset: 0, bodyRows }, view: {} },
+  viewport: { columns: 200, rows: 60, isFullscreen: placement === 'dock' },
+  props: { title: 'ccburn', isFocused: false, bodyColumns, placement, scroll: { offset: 0, bodyRows }, view: {} },
 })
 
 export const command = (args = '') => ({

@@ -150,6 +150,9 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
 - **plotext's fill level:** `fillx=True` becomes a fill level of 0 in plotext's `check_fill`, not the 1 its `get_fill_level` appears to use. The first golden run caught this.
 - **Golden generation needs ccburn's models clock pinned too:** `LimitData.is_expired` reads the clock in `ccburn.data.models`; left real, every fixture window reads as expired and the projection starts at 0.
 - **The toggle row** sits under the chart, so the chart takes the body rows minus four.
+- **Live, 2026-10-05 (2.1.289, Max account, terminal not in fullscreen):** the readings arrive and the `Raster` chart draws in a real pane. Two defects found and fixed:
+  - **Inline, a pane's body is never taller than what it draws.** `scroll.bodyRows` reported 5 (the header, gauges, a message and the toggle), so the chart never got room and the too-small line kept the pane small. The fix: inline, the pane always draws at least 24 rows (padding below the toggle) and asks for 24 on open, so `bodyRows` reports the room actually given and the chart fills it (down to ccburn's 8-row minimum). In that session the room was 12 rows, so the chart drew at 8. A docked pane (fullscreen) runs floor to ceiling and is unchanged.
+  - **The engine prefixes a command's output with the plugin name**, so the result text no longer repeats `ccburn:`.
 
 ## Testing Approach
 

@@ -23,6 +23,14 @@ export const MIN_ROWS = 15
 /** Header, two gauges and the toggle row. */
 const CHROME_ROWS = 4
 
+/**
+ * Inline above the prompt, a pane's body is never taller than what it draws,
+ * so there the pane always draws at least this many rows (padding below the
+ * chart) and its body rows then report the room it was actually given.
+ */
+export const INLINE_CHART_ROWS = 20
+export const INLINE_ROWS = INLINE_CHART_ROWS + CHROME_ROWS
+
 export type PaneModel = {
   kind: WindowKind
   limit: LimitData | null
@@ -31,6 +39,8 @@ export type PaneModel = {
   now: number
   columns: number
   rows: number
+  /** `inline` above the prompt, or `dock`ed beside a fullscreen transcript. */
+  placement: 'dock' | 'inline'
   offsetAt: OffsetAt
   onToggle: () => void
 }
@@ -85,12 +95,16 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
     </Box>
   )
 
+  const isInline = model.placement === 'inline'
+  // Inline, rows under INLINE_ROWS mean the room is short, not that the content was.
   const chartRows = model.rows - CHROME_ROWS
+  const isTooSmall = model.columns < MIN_COLUMNS || chartRows < (isInline ? 8 : MIN_ROWS - CHROME_ROWS)
+  const padding = isInline ? Math.max(0, INLINE_ROWS - Math.max(model.rows, CHROME_ROWS + 1)) : 0
   let body: RenderNode[] = []
 
   if (!model.limit) {
     body = [<Text dimColor>{model.isWithoutLimits ? MESSAGES.withoutLimits : MESSAGES.waiting}</Text>]
-  } else if (model.columns < MIN_COLUMNS || model.rows < MIN_ROWS) {
+  } else if (isTooSmall) {
     body = [<Text dimColor>{MESSAGES.tooSmall}</Text>]
   } else if (Raster !== undefined) {
     const percentPerHour = burnRate(model.snapshots, windowStart(model.limit), model.limit.windowHours)
@@ -123,6 +137,7 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
       <Box flexDirection="row">
         <Button key="window" label={`Show ${DISPLAY_NAME[other]}`} hotkey="w" plain onPress={model.onToggle} />
       </Box>
+      {padding > 0 ? <Box height={padding} /> : []}
     </Box>
   )
 }

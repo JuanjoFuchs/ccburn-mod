@@ -5,12 +5,18 @@ import type { Reading, WindowKind } from '../types'
 import { machineOffset } from './core/clock'
 import { DISPLAY_NAME } from './core/gauges'
 import { fromStore, limitOf, merge, readingsOf, snapshotsOf } from './core/readings'
-import { drawPane } from './views/pane'
+import { drawPane, INLINE_ROWS } from './views/pane'
 
 const PANE = 'ccburn'
 const TITLE = 'ccburn'
 const STORE_KEY = 'readings'
 const TICK_MS = 60_000
+/**
+ * Body rows to ask for when the pane sits inline above the prompt (a terminal
+ * that is not fullscreen): the header, gauges, chart and toggle row. A docked
+ * pane ignores it and runs floor to ceiling.
+ */
+const OPEN = { id: PANE, title: TITLE, rows: INLINE_ROWS } as const
 
 const windowAtom = atom({ plugin: 'ccburn', key: 'window' } as const, 'five_hour' as WindowKind)
 const readingsAtom = atom({ plugin: 'ccburn', key: 'readings' } as const, [] as Reading[])
@@ -64,7 +70,7 @@ export const register: Register = (on, options) => {
     })
 
     if (options.openOnStart !== false) {
-      void $.ui.open({ id: PANE, title: TITLE }).catch(() => undefined)
+      void $.ui.open(OPEN).catch(() => undefined)
     }
 
     return next(e)
@@ -98,12 +104,11 @@ export const register: Register = (on, options) => {
     }
 
     await update($, windowAtom, () => kind)
-    const opened = await $.ui.open({ id: PANE, title: TITLE })
+    const opened = await $.ui.open(OPEN)
 
+    // The engine already prefixes a command's output with the plugin's name.
     return {
-      text: opened.isPlaced
-        ? `ccburn: ${DISPLAY_NAME[kind]} chart open.`
-        : `ccburn: the pane is waiting for room (${opened.reason}).`,
+      text: opened.isPlaced ? `${DISPLAY_NAME[kind]} chart open.` : `The pane is waiting for room (${opened.reason}).`,
     }
   })
 
@@ -122,6 +127,7 @@ export const register: Register = (on, options) => {
       now,
       columns: Math.floor(e.props.bodyColumns),
       rows: Math.floor(e.props.scroll.bodyRows),
+      placement: e.props.placement,
       offsetAt: machineOffset,
       onToggle: () => {
         void update($, windowAtom, current => (current === 'five_hour' ? 'seven_day' : 'five_hour'))
