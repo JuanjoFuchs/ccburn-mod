@@ -38,6 +38,15 @@ Three files: `.claude-plugin/plugin.json` (name, version, description; `types` w
 
 `$.command.register({ name, description })` in `session.start`, answered by `on('command.run', { command: name }, ...)` returning `{ text }`.
 
+## Measured on 2.1.289 (probe, 2026-10-05)
+
+- **Raster size:** a pane `Raster` of 200 × 59 mounted in the test kit (about 190k base64 characters). The 100,000-character tree cap in the types is stated for `Client` surface-module trees, not hooks-module trees.
+- **`$.state` in tests:** served by the kit; no `state.get` / `state.set` hooks needed.
+- **Test-kit finders are async:** `await mounted.find(query)`. A `{ text }` query also matches every ancestor `Box` whose concatenated text fits, so pin `type: 'Text'` for a leaf.
+- **Ops a test must answer** (or the bottom hook throws): `command.register`, `session.usage`, `ui.open`, `store.get` / `store.set`, plus a bottom for every event the plugin hooks and passes on (`session.start`, `session.measure`, `ui.render`). See `tests/fixtures/world.ts`.
+- **Type-checking without a loaded mod:** the engine lays `.claude-plugin/types/` only when it loads the mod from a watched folder. Before that, point a throwaway tsconfig that extends this repo's at the skill's `claude-code.d.ts`, and run `npx -p typescript tsc -p <it>`.
+- `claude plugin validate` warns that a root `CLAUDE.md` is not loaded as plugin context. That is expected here: it is for agents working on the repo.
+
 ## Developing, testing, shipping
 
 - **Develop:** loading the `plugin-authoring` skill watches a per-session mods folder, and the person must answer **Enable for this session** (nothing else can). Or run `claude --plugin-dir <repo>` for a watched folder. A save reloads the module when the turn ends.

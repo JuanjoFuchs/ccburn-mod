@@ -1,6 +1,6 @@
 # AGENTS.md
 
-ccburn-mod: a Claude Code mod that draws ccburn's burn-up chart in a pane inside Claude Code. Harness only; spec 001 pending review.
+ccburn-mod: a Claude Code mod that draws ccburn's burn-up chart in a pane inside Claude Code.
 
 **CRITICAL: You MUST read the required files BEFORE taking action.** This is not optional.
 
@@ -19,7 +19,8 @@ ccburn-mod: a Claude Code mod that draws ccburn's burn-up chart in a pane inside
 ## Conventions
 
 - Language: TypeScript hooks module; no Node or DOM APIs. Reach the outside world only through `$`.
-- Verify before done: `claude plugin validate .` → `tsc -p .` → `claude plugin test .`, then the spec's manual checks. Build-only is not done.
+- Verify before done: `claude plugin validate .` → `tsc` (see mod-api.md for type-checking before the mod is loaded) → `claude plugin test .`, then the spec's manual checks. Build-only is not done.
+- Goldens: never hand-edit `tests/fixtures/golden/`; change `tools/make-goldens.py` and rerun it with ccburn's venv (`PYTHONHASHSEED=0`).
 - Live-check on a **subscription** profile; Enterprise accounts get no rate-limit readings.
 - Commits: gitmoji subject (matches ccburn): ✨ feature, 🐛 fix, 📝 docs, ♻️ refactor, 🔖 release. Commit with an explicit pathspec: `git commit -- <paths>`.
 - New durable knowledge → a file in `ai-docs/` plus a row here; keep `PROJECT_UNDERSTANDING.md` lean.
@@ -34,4 +35,4 @@ ccburn-mod: a Claude Code mod that draws ccburn's burn-up chart in a pane inside
 
 ## Current State
 
-- No plugin code. No GitHub remote. Spec 001 `pending`.
+- Spec 001 in progress: chart ported and golden-matched; pane and command wired. Live and install checks open. No GitHub remote.

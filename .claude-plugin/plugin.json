@@ -1,0 +1,19 @@
+{
+  "name": "ccburn",
+  "version": "0.1.0",
+  "description": "ccburn's burn-up chart for your Claude Code session and weekly limits, in a pane inside Claude Code.",
+  "author": { "name": "Juan José Fuchs", "url": "https://github.com/JuanjoFuchs" },
+  "homepage": "https://github.com/JuanjoFuchs/ccburn-mod",
+  "repository": "https://github.com/JuanjoFuchs/ccburn-mod",
+  "license": "MIT",
+  "keywords": ["usage", "rate-limits", "burn-up", "chart", "mod"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "openOnStart": {
+      "type": "boolean",
+      "title": "Open the chart at session start",
+      "description": "Open the ccburn pane when a session starts. Claude Code only seats an unasked pane on a wide terminal; otherwise run /ccburn.",
+      "default": true
+    }
+  }
+}

@@ -76,7 +76,7 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
   - burn rate in %/h by least-squares regression over in-window readings, 0 when there are fewer than 3 points or they span less than `min(window × 10 %, 6 h)` (`calculate_burn_rate`);
   - time to 100 % and whether it lands before the reset (the CLI's JSON `projection` block);
   - an expired window (`resetsAt` in the past) reads as 0 % (`effective_utilization`).
-- **FR4 — Readings and history.** Readings come from `session.measure` and, at session start, `$.session.usage()`. Each reading is stored as `{ provider, kind, timestamp, percentUsed, resetsAt }` in the plugin's `$.store`, so the chart and the regression have points from earlier sessions. On write, readings older than their own window are pruned and the store is capped at the newest 5,000 readings. Concurrent sessions of one profile share the store: a write merges by `(provider, kind, timestamp)` and never overwrites another session's readings.
+- **FR4 — Readings and history.** Readings come from `session.measure` and, at session start, `$.session.usage()`. Each reading is stored as `{ provider, kind, timestamp, percentUsed, resetsAt }` in the plugin's `$.store`, so the chart and the regression have points from earlier sessions. On write, readings older than one window length (5 h, 168 h; 7 days for a window the pane does not draw) are pruned, a repeat of the last reading within a minute is not stored again, and the store is capped at the newest 5,000 readings. Concurrent sessions of one profile share the store: a write merges by `(provider, kind, timestamp)` and never overwrites another session's readings.
 - **FR5 — Opening and switching.** A `/ccburn` slash command opens (or focuses) the pane titled `ccburn`, showing the 5-hour window; `/ccburn weekly` shows the weekly window. Inside the pane a button toggles between the two. With `userConfig.openOnStart` (boolean, default `true`) the pane is also opened at session start, which the engine seats only on a terminal of 144 columns or more and otherwise holds until asked.
 - **FR6 — Live redraw.** The chart redraws on every new reading and at least once a minute from a clock timer, so Now, budget pace and time-to-reset advance between readings.
 - **FR7 — No data.** Before the first reading, the pane says it is waiting for Claude Code's first rate-limit reading. When the account reports no rate-limit windows at all (an Enterprise or API account, TC2), the pane says so plainly instead of showing an empty chart.
@@ -128,7 +128,7 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
 ### Chart (FR1, FR2)
 - [ ] AC5: **Golden match.** For each golden fixture rendered by the real ccburn, the TS chart grid matches it cell for cell in glyph and foreground colour. The fixtures cover a 5-hour window with a green projection, a 5-hour window with a Depleted line, a weekly window, no readings, and two sizes (80 × 20, 60 × 14). — `unit` (golden fixtures; covers frame, labels, legend, braille, fill, draw order)
 - [ ] AC6: X-tick rules: `HH:MM` on the 5-hour window, `Tue 09h` style on the weekly; a grid tick within 10 % of Now or Depleted is dropped; overlapping labels resolve in ascending position. — `unit`
-- [ ] AC7: The `Raster`'s `columns` equal the pane's body width at 80 and at 160 columns, and its `rows` equal the body rows minus the three header/gauge rows. — `integration` (`ui.mount` on `terminal`)
+- [ ] AC7: The `Raster`'s `columns` equal the pane's body width at 80 and at 160 columns, and its `rows` equal the body rows minus four (header, two gauges, and the toggle row). — `integration` (`ui.mount` on `terminal`)
 - [ ] AC7a: Header and gauge text for fixed inputs match ccburn's: emoji, `Resets in 2h 30m`, bar glyphs and widths at W = 80 and 60, `40%` / `50%`, and the loading state. — `unit`
 - [ ] AC7b: A body under 40 × 15 shows the too-small line and no `Raster`. — `integration`
 - [ ] AC8: In a live session, `/ccburn` and `/ccburn weekly` read the same as `ccburn session` / `ccburn weekly` open in a second terminal at the same moment. — `manual` (end-to-end eyeball across two real renderers and live data; AC5 already pins the renderer)
@@ -143,6 +143,13 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
 
 ### Distribution (FR8)
 - [ ] AC15: From a clean profile, `claude plugin marketplace add <local checkout>` then `claude plugin install` installs it, and a new session's `/ccburn` draws the chart after the first turn. — `manual` (installs into a real profile)
+
+## Findings: implementation
+
+- **Probe (2026-10-05, Claude Code 2.1.289):** the test kit's `$.ui.mount` accepted a `Raster` of up to 200 × 59 cells (about 190,000 base64 characters) in a pane. The documented 100,000-character tree cap applies to surface-module (`Client`) trees, which have no `Raster`. The kit serves `$.state` (`atom` / `read` / `update`) without extra hooks. Still to confirm live: that the terminal draws a full-pane `Raster` without refusal (AC8).
+- **plotext's fill level:** `fillx=True` becomes a fill level of 0 in plotext's `check_fill`, not the 1 its `get_fill_level` appears to use. The first golden run caught this.
+- **Golden generation needs ccburn's models clock pinned too:** `LimitData.is_expired` reads the clock in `ccburn.data.models`; left real, every fixture window reads as expired and the projection starts at 0.
+- **The toggle row** sits under the chart, so the chart takes the body rows minus four.
 
 ## Testing Approach
 
