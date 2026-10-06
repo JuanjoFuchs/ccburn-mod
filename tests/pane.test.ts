@@ -46,6 +46,30 @@ describe('the pane', () => {
     })
   }
 
+  test('in a narrow pane the header sheds detail to stay on one row, so nothing scrolls', async ($, on) => {
+    const world = worldOf(on)
+    world.rateLimits = limits(40)
+    mock.clock(on, { now: NOW })
+    await $.session.start(SESSION)
+
+    for (const columns of [45, 40, 30]) {
+      const mounted = await $.ui.mount(pane('terminal', columns, 30))
+      const tree = (await mounted.drawn()) as { children?: { children?: unknown[] }[] }
+      const headerRow = tree.children?.[0]
+      const text = (headerRow?.children ?? [])
+        .map(child => {
+          const node = child as { type?: string; props?: { label?: string }; children?: unknown[] }
+          return node.type === 'Button' ? `w: ${node.props?.label ?? ''}` : String(node.children?.[0] ?? '')
+        })
+        .join('')
+      expect([...text].reduce((w, ch) => w + ((ch.codePointAt(0) ?? 0) >= 0x1f000 || ch === '⏰' ? 2 : 1), 0)).toBeLessThanOrEqual(columns)
+      if (columns >= 40) {
+        expect(rowsOf(tree)).toBe(30)
+      }
+      await mounted.unmount()
+    }
+  })
+
   test('a body under 40 × 15 shows the too-small line and no chart', async ($, on) => {
     const world = worldOf(on)
     world.rateLimits = limits(40)

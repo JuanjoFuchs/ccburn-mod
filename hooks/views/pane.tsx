@@ -9,7 +9,7 @@ import type { Elements, RenderElement, RenderNode } from 'claude-code'
 import type { WindowKind } from '../../types'
 import { chartCells } from '../core/chart'
 import type { OffsetAt } from '../core/clock'
-import { barWidth, cellWidth, DISPLAY_NAME, gauges, header, type Run } from '../core/gauges'
+import { barWidth, cellWidth, DISPLAY_NAME, gauges, header, type Header, type Run } from '../core/gauges'
 import { burnRate, windowStart, type LimitData, type Snapshot } from '../core/metrics'
 import { packCells } from '../core/raster'
 
@@ -79,13 +79,46 @@ function rightAligned(list: readonly Run[], width: number): Run[] {
   return used >= width ? [...list] : [{ text: ' '.repeat(width - used) }, ...list]
 }
 
+/** The toggle's short label for a narrow pane. */
+const SHORT_NAME: Record<WindowKind, string> = { five_hour: '5h', seven_day: 'Weekly' }
+
+const widthOf = (list: readonly Run[]): number => list.reduce((sum, run) => sum + cellWidth(run.text), 0)
+
+type FittedHeader = { title: Run[]; toggle: string; right: Run[]; leftWidth: number }
+
+/**
+ * The header's parts at the most detail that fits `width` on one row: the full
+ * title and toggle; then a short toggle; then the title without `ccburn - `;
+ * then without the reset countdown.
+ */
+export function fitHeader(head: Header, width: number, toggle: string, shortToggle: string): FittedHeader {
+  const shortTitle = [head.left[0] ?? { text: '' }, head.left[3] ?? { text: '' }]
+  const tries: [Run[], string, Run[]][] = [
+    [head.left, toggle, head.right],
+    [head.left, shortToggle, head.right],
+    [shortTitle, shortToggle, head.right],
+    [shortTitle, shortToggle, []],
+  ]
+
+  for (const [title, label, right] of tries) {
+    const leftWidth = widthOf(title) + 2 + `${TOGGLE_KEY}: ${label}`.length
+    const rightWidth = widthOf(right)
+
+    if (leftWidth + (rightWidth > 0 ? 1 + rightWidth : 0) <= width) {
+      return { title, toggle: label, right, leftWidth }
+    }
+  }
+
+  const [title, label] = [shortTitle, shortToggle]
+
+  return { title, toggle: label, right: [], leftWidth: widthOf(title) + 2 + `${TOGGLE_KEY}: ${label}`.length }
+}
+
 export function drawPane(kit: Kit, model: PaneModel): RenderElement {
   const { Box, Text, Button, Raster } = kit
   const width = Math.max(1, model.columns)
   const name = DISPLAY_NAME[model.kind]
   const head = header(name, model.limit, model.now, model.offsetAt)
-  const leftWidth = Math.ceil(width / 2)
-  const rightWidth = width - leftWidth
   const [usage, elapsed] = gauges(model.limit, model.now, width)
   const bar = barWidth(width)
 
@@ -135,20 +168,18 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
   const padding = isInline ? Math.max(0, model.rows - CHROME_ROWS - bodyRows) : 0
 
   // The window toggle rides in the header after the title, so it costs no row.
+  // A header that overflows wraps onto a second row and makes the pane scroll,
+  // so in a narrow pane it sheds detail until it fits on one.
   const other: WindowKind = model.kind === 'five_hour' ? 'seven_day' : 'five_hour'
-  const toggleLabel = `Show ${DISPLAY_NAME[other]}`
-  const titleWidth = head.left.reduce((sum, run) => sum + cellWidth(run.text), 0)
-  const toggleWidth = 2 + `${TOGGLE_KEY}: ${toggleLabel}`.length
-  const gap = Math.max(0, leftWidth - titleWidth - toggleWidth)
+  const fit = fitHeader(head, width, `Show ${DISPLAY_NAME[other]}`, SHORT_NAME[other])
 
   return (
     <Box flexDirection="column">
       <Box flexDirection="row">
-        {runs(kit, head.left)}
+        {runs(kit, fit.title)}
         <Text>{'  '}</Text>
-        <Button key="window" label={toggleLabel} hotkey={TOGGLE_KEY} plain onPress={model.onToggle} />
-        {gap > 0 ? <Text>{' '.repeat(gap)}</Text> : []}
-        {runs(kit, rightAligned(head.right, rightWidth))}
+        <Button key="window" label={fit.toggle} hotkey={TOGGLE_KEY} plain onPress={model.onToggle} />
+        {runs(kit, rightAligned(fit.right, width - fit.leftWidth))}
       </Box>
       {gaugeRow(usage)}
       {gaugeRow(elapsed)}
