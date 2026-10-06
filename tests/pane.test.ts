@@ -60,22 +60,28 @@ describe('the pane', () => {
     }
   })
 
-  test('inline above the prompt it draws tall enough to be given room, and fits the room it gets', async ($, on) => {
+  test('inline above the prompt it draws tall enough to be given room, then fits that room with nothing to scroll', async ($, on) => {
     const world = worldOf(on)
     world.rateLimits = limits(40)
     mock.clock(on, { now: NOW })
     await $.session.start(SESSION)
 
-    // Given only the rows its last, shorter content needed: it pads itself to INLINE_ROWS.
-    const short = await $.ui.mount(pane('terminal', 98, 5, 'inline'))
-    expect(await short.find({ type: 'Raster' })).toBeUndefined()
-    expect(rowsOf(await short.drawn())).toBeGreaterThanOrEqual(INLINE_ROWS)
-    await short.unmount()
+    // Room unknown: it draws INLINE_ROWS tall, whatever its body was, so it can be given room.
+    const first = await $.ui.mount(pane('terminal', 98, 5, 'inline'))
+    expect(rowsOf(await first.drawn())).toBe(INLINE_ROWS)
+    await first.unmount()
 
-    // Given 12 rows: the chart takes the 9 left after the header and gauges.
+    // Given 12 of those rows: it fits them exactly, the chart taking 9, nothing left to scroll.
     const room = await $.ui.mount(pane('terminal', 98, 12, 'inline'))
     expect((await room.find({ type: 'Raster' }))?.props.rows).toBe(9)
+    expect(rowsOf(await room.drawn())).toBe(12)
     await room.unmount()
+
+    // Opening it again measures the room again.
+    await $.command.run(command())
+    const reopened = await $.ui.mount(pane('terminal', 98, 12, 'inline'))
+    expect(rowsOf(await reopened.drawn())).toBe(INLINE_ROWS)
+    await reopened.unmount()
   })
 
   test('before any reading it waits; an account with no windows says so', async ($, on) => {
@@ -135,6 +141,11 @@ describe('the /ccburn command', () => {
     expect((await mounted.find({ type: 'Button', key: 'window' }))?.props.label).toBe('Show Session (5h)')
 
     await mounted.press({ key: 'window', plugin: PLUGIN })
+    expect(await mounted.find({ text: 'Session (5h)' })).toBeDefined()
+
+    // Plain /ccburn always brings the 5-hour window back.
+    await $.command.run(command('weekly'))
+    await $.command.run(command())
     expect(await mounted.find({ text: 'Session (5h)' })).toBeDefined()
 
     expect((await $.command.run(command('monthly'))).text).toBe('Usage: /ccburn [weekly]')

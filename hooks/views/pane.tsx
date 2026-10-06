@@ -27,9 +27,10 @@ const CHROME_ROWS = 3
 const TOGGLE_KEY = 'w'
 
 /**
- * Inline above the prompt, a pane's body is never taller than what it draws,
- * so there the pane always draws at least this many rows (padding below the
- * chart) and its body rows then report the room it was actually given.
+ * Inline above the prompt, a pane's body is never taller than what it draws.
+ * So the pane first draws this many rows (padding below the chart); the body
+ * rows it is then given are the room, and from then on it draws exactly that,
+ * leaving nothing to scroll.
  */
 export const INLINE_CHART_ROWS = 20
 export const INLINE_ROWS = INLINE_CHART_ROWS + CHROME_ROWS
@@ -129,7 +130,9 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
     bodyRows = 0
   }
 
-  const padding = isInline ? Math.max(0, INLINE_ROWS - CHROME_ROWS - bodyRows) : 0
+  // Inline, the pane draws exactly `rows` tall (the caller's measured room, or
+  // INLINE_ROWS while it is still finding out), padding under a short body.
+  const padding = isInline ? Math.max(0, model.rows - CHROME_ROWS - bodyRows) : 0
 
   // The window toggle rides in the header after the title, so it costs no row.
   const other: WindowKind = model.kind === 'five_hour' ? 'seven_day' : 'five_hour'

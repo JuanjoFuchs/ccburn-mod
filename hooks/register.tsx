@@ -46,6 +46,36 @@ async function save($: Engine, fresh: readonly Reading[]): Promise<void> {
 }
 
 /**
+ * Inline room: the body rows Claude Code gives the pane above the prompt.
+ * Unknown (null) until the pane has drawn INLINE_ROWS once and been given
+ * fewer; reset whenever the pane is opened, so a new layout is measured again.
+ */
+let inlineRoom: number | null = null
+let inlineDrawn: number | null = null
+
+/** How tall to draw inline, given the body rows the engine reports now. */
+function inlineHeight(bodyRows: number): number {
+  if (inlineDrawn !== null && bodyRows < inlineDrawn) {
+    inlineRoom = bodyRows
+  } else if (inlineRoom !== null && bodyRows > inlineRoom) {
+    inlineRoom = bodyRows
+  }
+
+  inlineDrawn = inlineRoom ?? INLINE_ROWS
+
+  return inlineDrawn
+}
+
+/** Forgets the measured room and redraws shortly, so the pane measures it again. */
+function remeasure($: Engine): void {
+  inlineRoom = null
+  inlineDrawn = null
+  $.clock.after(250, () => {
+    void tick($).catch(() => undefined)
+  })
+}
+
+/**
  * Spec 002: share history with ccburn while it answers. Set from `useCcburn`
  * at session start; a failed call turns it off until the next session.
  */
@@ -134,6 +164,7 @@ export const register: Register = (on, options) => {
     })
 
     if (options.openOnStart !== false) {
+      remeasure($)
       void $.ui.open(OPEN).catch(() => undefined)
     }
 
@@ -168,6 +199,7 @@ export const register: Register = (on, options) => {
     }
 
     await update($, windowAtom, () => kind)
+    remeasure($)
     const opened = await $.ui.open(OPEN)
 
     // The engine already prefixes a command's output with the plugin's name.
@@ -190,7 +222,10 @@ export const register: Register = (on, options) => {
       isWithoutLimits,
       now,
       columns: Math.floor(e.props.bodyColumns),
-      rows: Math.floor(e.props.scroll.bodyRows),
+      rows:
+        e.props.placement === 'inline'
+          ? inlineHeight(Math.floor(e.props.scroll.bodyRows))
+          : Math.floor(e.props.scroll.bodyRows),
       placement: e.props.placement,
       offsetAt: machineOffset,
       onToggle: () => {
