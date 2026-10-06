@@ -1,7 +1,7 @@
 ---
 id: "002"
 title: Share history with ccburn when it is installed
-status: in_progress      # pending | in_progress | complete
+status: complete         # pending | in_progress | complete
 blocked_by: []
 blocks: []
 ---
@@ -59,7 +59,7 @@ JJ, 2026-10-05: *"how can we make it so that they share the storage. So if someb
 - [x] AC3: When `ccburn` fails (non-zero exit), the mod stops calling it and still draws from its own readings. — `integration`
 - [x] AC4: With `useCcburn: false`, no command runs. — `integration` (`test(name, { options })`)
 - [x] AC5: The parser skips malformed snapshots and limits; the stdin builder round-trips through ccburn's `collect` field names. — `unit`
-- [ ] AC6: Live: in the test pane (work profile, `ccburn collect` in its status line), with the pane's session idle while other agents work, the usage gauge moves within two minutes. — `manual` (needs real sessions burning the account)
+- [x] AC6: Live: in the test pane (work profile, `ccburn collect` in its status line), with the pane's session idle while other agents work, the usage gauge moves within two minutes. — `manual` (needs real sessions burning the account). *Verified 2026-10-05 with the ccburn checkout installed globally: the idle pane, last measured at 0 % / 5 %, showed 12 % (5-hour) and 8 % (weekly), matching `ccburn history`, and drew the whole window's usage line from ccburn's data.*
 
 ## Testing Approach
 
