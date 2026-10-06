@@ -1,10 +1,10 @@
 # 🔥 ccburn-mod
 
-[![Claude Code mod](https://img.shields.io/badge/Claude%20Code-mod-d97757)](https://github.com/JuanjoFuchs/ccburn-mod)
-[![Marketplace](https://img.shields.io/badge/install-claude%20plugin-blue)](#install)
-[![ccburn](https://img.shields.io/pypi/v/ccburn?label=ccburn)](https://github.com/JuanjoFuchs/ccburn)
-[![GitHub tag](https://img.shields.io/github/v/tag/JuanjoFuchs/ccburn-mod?label=version)](https://github.com/JuanjoFuchs/ccburn-mod/tags)
-[![Last commit](https://img.shields.io/github/last-commit/JuanjoFuchs/ccburn-mod)](https://github.com/JuanjoFuchs/ccburn-mod/commits/main)
+[![CI](https://img.shields.io/github/actions/workflow/status/JuanjoFuchs/ccburn-mod/ci.yml?branch=main&label=CI)](https://github.com/JuanjoFuchs/ccburn-mod/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/JuanjoFuchs/ccburn-mod)](https://github.com/JuanjoFuchs/ccburn-mod/releases)
+[![Claude Code mod](https://img.shields.io/badge/Claude%20Code-mod-d97757)](#install)
+[![Works with ccburn](https://img.shields.io/pypi/v/ccburn?label=works%20with%20ccburn)](https://github.com/JuanjoFuchs/ccburn)
+[![Last commit](https://img.shields.io/github/last-commit/JuanjoFuchs/ccburn-mod/main)](https://github.com/JuanjoFuchs/ccburn-mod/commits/main)
 [![License](https://img.shields.io/github/license/JuanjoFuchs/ccburn-mod)](LICENSE)
 
 <p align="center">
