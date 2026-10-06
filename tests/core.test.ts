@@ -145,15 +145,15 @@ describe('header and gauges (ccburn gauges.py)', () => {
     const [usage, elapsed] = gauges(null, NOW, 80)
     expect(text(usage.value)).toBe('--%')
     expect(text(elapsed.label)).toBe('⏳ Elapsed')
-    expect(text(usage.bar)).toBe('━'.repeat(46))
+    expect(text(usage.bar)).toBe('━'.repeat(60))
   })
 
-  test('bars at 80 and 60 columns', () => {
-    expect(barWidth(80)).toBe(46)
-    expect(barWidth(60)).toBe(26)
+  test('bars at 80 and 60 columns (a 4-cell value column, not ccburn’s 18)', () => {
+    expect(barWidth(80)).toBe(60)
+    expect(barWidth(60)).toBe(40)
     const [usage, elapsed] = gauges(limit, NOW, 80)
-    expect(text(usage.bar)).toBe(`${'━'.repeat(18)}╺${'━'.repeat(27)}`)
-    expect(text(elapsed.bar)).toBe(`${'━'.repeat(23)}╺${'━'.repeat(22)}`)
+    expect(text(usage.bar)).toBe(`${'━'.repeat(24)}╺${'━'.repeat(35)}`)
+    expect(text(elapsed.bar)).toBe(`${'━'.repeat(30)}╺${'━'.repeat(29)}`)
     expect(text(usage.value)).toBe('40%')
     expect(text(elapsed.value)).toBe('50%')
     expect(usage.value[0]?.color).toBe(RICH.green)

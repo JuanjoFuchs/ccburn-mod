@@ -65,9 +65,9 @@ Different stack (TypeScript mod vs Python CLI), different distribution (a Claude
   - **No colour background** anywhere: the terminal default.
 - **FR2 — Header and gauges.** Above the chart, the three rows ccburn's `gauges.py` draws:
   - **Header:** the left half reads pace emoji, space, **bold magenta** `ccburn`, dim ` - `, then **bold cyan** `Session (5h)` / `Weekly`. The right half is right-aligned `⏰ ` plus `format_reset_time` in yellow (`Resets in 2h 30m`; `Resets Tue 4:00 PM` beyond 24 h; `Resets Tue 10/7 7PM` beyond 7 days; `Reset pending`). With no data, the emoji is `🔥` and the right half is dim `⏳ Loading...`.
-  - **Usage:** `📊 Usage` (bold, in the utilization colour), a bar `width − 34` cells wide drawn as Rich's ProgressBar draws it (`━` filled, `╸` half, `╺` boundary, back colour grey 95,95,95), and the right-aligned value `NN%`. The colour is `get_utilization_color(effective_utilization, budget_pace)`.
+  - **Usage:** `📊 Usage` (bold, in the utilization colour), a bar `width − 20` cells wide (ccburn: `width − 34`; see the value column below) drawn as Rich's ProgressBar draws it (`━` filled, `╸` half, `╺` boundary, back colour grey 95,95,95), and the right-aligned value `NN%`. The colour is `get_utilization_color(effective_utilization, budget_pace)`.
   - **Elapsed:** `⏳ Elapsed` (bold blue), a bar at budget pace in blue, and `NN%` in blue.
-  - Layout widths: a 14-column label, 1-column gaps, an 18-column right-aligned value. With no data, both rows are dim, with empty bars and `--%`.
+  - Layout widths: a 14-column label, 1-column gaps, a right-aligned value column. ccburn's is 18 wide, for monthly dollar amounts; the mod shows only percentages, so its value column is 4 and the bars take the rest (JJ, 2026-10-05: *"why don't the ... progress bars [reach all the way to the end]?"*). With no data, both rows are dim, with empty bars and `--%`.
 - **FR2a — Too small.** When the pane body is under 40 columns or under 15 rows, the chart is replaced by the dim line `Pane too small for chart. Widen or heighten it.` (ccburn's compact layout); the header and gauges still draw.
 - **FR2b — Formatting fidelity.** Every number formatted as Python formats it, including round-half-to-even (`62.5` → `62%`), so the mod and ccburn never disagree by one on the same reading.
 - **FR3 — Metrics.** Same definitions and thresholds as the CLI:

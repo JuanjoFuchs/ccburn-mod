@@ -92,8 +92,18 @@ export function bar(width: number, completed: number, complete: string, back = R
 
 export type GaugeRow = { label: Run[]; bar: Run[]; value: Run[] }
 
-/** The width of the bar column in a gauge row `width` cells wide. */
-export const barWidth = (width: number): number => Math.max(1, width - 34)
+/** The label column, as ccburn draws it. */
+export const LABEL_WIDTH = 14
+
+/**
+ * The value column. ccburn reserves 18 for monthly dollar amounts
+ * (`$74.75 / $300.00`); the mod only shows percentages (`100%`), so it keeps
+ * 4 and gives the rest to the bars.
+ */
+export const VALUE_WIDTH = 4
+
+/** The width of the bar column in a gauge row `width` cells wide (one-cell gaps either side). */
+export const barWidth = (width: number): number => Math.max(1, width - LABEL_WIDTH - VALUE_WIDTH - 2)
 
 /** `create_gauge_section`: the Usage and Elapsed rows. */
 export function gauges(limit: LimitData | null, now: number, width: number): [GaugeRow, GaugeRow] {

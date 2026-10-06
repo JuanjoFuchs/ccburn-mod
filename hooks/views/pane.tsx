@@ -9,7 +9,7 @@ import type { Elements, RenderElement, RenderNode } from 'claude-code'
 import type { WindowKind } from '../../types'
 import { chartCells } from '../core/chart'
 import type { OffsetAt } from '../core/clock'
-import { barWidth, cellWidth, DISPLAY_NAME, gauges, header, type Header, type Run } from '../core/gauges'
+import { barWidth, cellWidth, DISPLAY_NAME, gauges, header, LABEL_WIDTH, VALUE_WIDTH, type Header, type Run } from '../core/gauges'
 import { burnRate, windowStart, type LimitData, type Snapshot } from '../core/metrics'
 import { packCells } from '../core/raster'
 
@@ -124,11 +124,11 @@ export function drawPane(kit: Kit, model: PaneModel): RenderElement {
 
   const gaugeRow = (row: typeof usage) => (
     <Box flexDirection="row">
-      {runs(kit, padded(row.label, 14))}
+      {runs(kit, padded(row.label, LABEL_WIDTH))}
       <Text> </Text>
       {runs(kit, padded(row.bar, bar))}
       <Text> </Text>
-      {runs(kit, rightAligned(row.value, 18))}
+      {runs(kit, rightAligned(row.value, VALUE_WIDTH))}
     </Box>
   )
 
