@@ -7,8 +7,9 @@
 
 ## Current state (2026-10-05)
 
-- Spec 001 in progress: the chart, header and gauges are ported and match ccburn's goldens; the pane, `/ccburn` and history are wired and tested. The live session check and the marketplace install check are still open.
-- No GitHub remote yet (`JuanjoFuchs/ccburn-mod` is JJ's call to create).
+- Spec 001 nearly done: the chart, header and gauges match ccburn's goldens; the pane, `/ccburn` and history are wired, tested and checked live in a real pane. Open: a full-height side-by-side with ccburn (AC8) and the README screenshot.
+- Spec 002 complete: with ccburn 0.8.0+ installed, the mod reads `ccburn history --json` every minute and writes through `ccburn collect`.
+- Published at github.com/JuanjoFuchs/ccburn-mod (public).
 
 ## Key decisions
 

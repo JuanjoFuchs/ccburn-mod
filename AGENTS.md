@@ -35,4 +35,4 @@ ccburn-mod: a Claude Code mod that draws ccburn's burn-up chart in a pane inside
 
 ## Current State
 
-- Spec 001 in progress: chart ported and golden-matched; pane and command wired. Live and install checks open. No GitHub remote.
+- Spec 001 in progress: chart ported and golden-matched; pane and command wired. Live checks pass (spec 002 complete). Published on GitHub.
